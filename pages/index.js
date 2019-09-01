@@ -31,6 +31,7 @@ export default class Home extends React.Component {
     this.removeDbListener = this.removeDbListener.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleDelete = this.handleDelete.bind(this);
   }
 
   componentDidMount () {
@@ -71,10 +72,10 @@ export default class Home extends React.Component {
 
     let unsubscribe = db.collection('messages').onSnapshot(
       querySnapshot => {
-        var messages = {};
+        var messages = new Map();
 
         querySnapshot.forEach(function (doc) {
-          messages[doc.id] = doc.data()
+          messages.set(doc.id, doc);
         });
 
         if (messages) this.setState({ messages });
@@ -82,7 +83,8 @@ export default class Home extends React.Component {
       error => {
         console.error(error);
       }
-    )
+    );
+
     this.setState({ unsubscribe });
   }
 
@@ -97,7 +99,7 @@ export default class Home extends React.Component {
     this.setState({ value: event.target.value });
   }
 
-  handleSubmit (event) {
+  handleSubmit(event) {
     event.preventDefault();
 
     var db = firebase.firestore();
@@ -109,6 +111,7 @@ export default class Home extends React.Component {
         id: date,
         text: this.state.value,
       });
+
     this.setState({ value: '' });
   }
 
@@ -118,6 +121,19 @@ export default class Home extends React.Component {
 
   handleLogout () {
     firebase.auth().signOut();
+  }
+
+  handleDelete(doc) {
+    if (!confirm('Are you OK?')) return;
+
+    // Delete on firestore
+    doc.ref.delete();
+
+    // Delete on local state
+    const messages = Object.assign(new Map(), this.state.messages);
+    messages.delete(doc.id);
+
+    this.setState({ messages });
   }
 
   render() {
@@ -146,8 +162,11 @@ export default class Home extends React.Component {
               </form>
               <ul>
                 {messages &&
-                  Object.keys(messages).map(key => (
-                    <li key={key}>{messages[key].text}</li>
+                  Array.from(messages.keys()).map(key => (
+                    <li key={key}>
+                      {messages.get(key).data().text}
+                      <button onClick={this.handleDelete.bind(null, messages.get(key))}>[delete]</button>
+                    </li>
                   ))}
               </ul>
             </div>
