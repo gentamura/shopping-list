@@ -8,6 +8,17 @@ import Link from 'next/link';
 import Head from '../components/head';
 import Nav from '../components/nav';
 
+const List = ({ text, handleDelete }) => {
+  return (
+    <li>
+      <label>
+        {text}
+      </label>
+      <button onClick={handleDelete}>[Delete]</button>
+    </li>
+  );
+};
+
 export default class Home extends React.Component {
   static async getInitialProps ({ req, query }) {
     const user = req && req.session ? req.session.decodedToken : null;
@@ -163,10 +174,11 @@ export default class Home extends React.Component {
               <ul>
                 {messages &&
                   Array.from(messages.keys()).map(key => (
-                    <li key={key}>
-                      {messages.get(key).data().text}
-                      <button onClick={this.handleDelete.bind(null, messages.get(key))}>[delete]</button>
-                    </li>
+                    <List
+                      key={key}
+                      text={messages.get(key).data().text}
+                      handleDelete={this.handleDelete.bind(null, messages.get(key))}
+                    />
                   ))}
               </ul>
             </div>
