@@ -26,6 +26,7 @@ export default class Home extends React.Component {
     // const snap = user && await req.firebaseServer.database().ref('messages').once('value');
     // const messages = snap && snap.val();
     const messages = null;
+    console.log('getInitialProps:user', user);
     return { user, messages };
   }
 
@@ -51,8 +52,13 @@ export default class Home extends React.Component {
     if (this.state.user) this.addDbListener();
 
     firebase.auth().onAuthStateChanged(user => {
+      console.log('componentDidMount:before:user', user);
+
       if (user) {
         this.setState({ user: user });
+
+        console.log('after:user', user);
+        console.log('user.uid', user.uid);
 
         return user
           .getIdToken()
@@ -78,23 +84,36 @@ export default class Home extends React.Component {
     });
   }
 
-  addDbListener () {
+  async addDbListener() {
     var db = firebase.firestore();
 
-    let unsubscribe = db.collection('messages').onSnapshot(
-      querySnapshot => {
-        var messages = new Map();
+    const usersRef = db.collection('/users');
+    const { user } = this.state;
 
-        querySnapshot.forEach(function (doc) {
-          messages.set(doc.id, doc);
-        });
+    await usersRef.doc(user.uid).set({
+      email: user.email || '',
+      name: user.displayName || '',
+      icon: user.photoURL || '',
+      lastLoggedIn: Date.now(),
+    });
 
-        if (messages) this.setState({ messages });
-      },
-      error => {
-        console.error(error);
-      }
-    );
+    let unsubscribe = db
+      .doc(`/users/${user.uid}`)
+      .collection('messages')
+      .onSnapshot(
+        querySnapshot => {
+          var messages = new Map();
+
+          querySnapshot.forEach(function (doc) {
+            messages.set(doc.id, doc);
+          });
+
+          if (messages) this.setState({ messages });
+        },
+        error => {
+          console.error(error);
+        }
+      );
 
     this.setState({ unsubscribe });
   }
@@ -114,9 +133,12 @@ export default class Home extends React.Component {
     event.preventDefault();
 
     var db = firebase.firestore();
+    const usersRef = db.collection('/users');
+    const { user } = this.state;
     const date = new Date().getTime();
 
-    db.collection('messages')
+    db.doc(`users/${user.uid}`)
+      .collection('messages')
       .doc(`${date}`)
       .set({
         id: date,
@@ -126,11 +148,17 @@ export default class Home extends React.Component {
     this.setState({ value: '' });
   }
 
-  handleLogin () {
-    firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
+  handleLogin() {
+    const google = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(google)
+      .then((result) => { 
+        console.log('result', result);
+      }, () => {
+
+      })
   }
 
-  handleLogout () {
+  handleLogout() {
     firebase.auth().signOut();
   }
 
