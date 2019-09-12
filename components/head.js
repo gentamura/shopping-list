@@ -31,6 +31,9 @@ const Head = props => (
     <meta property="og:image" content={props.ogImage || defaultOGImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+
+    <link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+    <link href="https://fonts.googleapis.com/css?family=Patrick+Hand+SC&display=swap" rel="stylesheet" />
   </NextHead>
 )
 
