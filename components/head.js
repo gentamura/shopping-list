@@ -32,8 +32,9 @@ const Head = props => (
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
 
-    <link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
-    <link href="https://fonts.googleapis.com/css?family=Patrick+Hand+SC&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.2.0/css/uikit.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.2.0/js/uikit.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.2.0/js/uikit-icons.min.js"></script>
   </NextHead>
 )
 

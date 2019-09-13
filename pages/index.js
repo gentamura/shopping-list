@@ -6,7 +6,6 @@ import 'isomorphic-unfetch';
 import clientCredentials from '../credentials/client';
 import Link from 'next/link';
 import Head from '../components/head';
-import Nav from '../components/nav';
 
 const List = ({ text, handleDelete }) => {
   return (
@@ -14,7 +13,7 @@ const List = ({ text, handleDelete }) => {
       <label>
         {text}
       </label>
-      <button onClick={handleDelete}>Delete</button>
+      <a href="" className="uk-icon-button" uk-icon="trash" onClick={handleDelete}></a>
     </li>
   );
 };
@@ -179,46 +178,70 @@ export default class Home extends React.Component {
     const { user, value, messages } = this.state;
 
     return (
-      <div>
+      <div className="uk-container">
         <Head title="Home" />
-        <Nav />
 
-        <div>
-          {user ? (
-            <button onClick={this.handleLogout}>Logout</button>
-          ) : (
-            <button onClick={this.handleLogin}>Login</button>
-          )}
-          {user && (
-            <div>
-              <form onSubmit={this.handleSubmit}>
-                <input
-                  type={'text'}
-                  onChange={this.handleChange}
-                  placeholder={'add message...'}
-                  value={value}
-                />
-              </form>
-              <ul>
-                {messages &&
-                  Array.from(messages.keys()).map(key => (
-                    <List
-                      key={key}
-                      text={messages.get(key).data().text}
-                      handleDelete={this.handleDelete.bind(null, messages.get(key))}
+        <nav className="uk-navbar-container" uk-navbar="boundary-align: true; align: center;">
+          <div className="uk-navbar-left">
+            <Link prefetch href="/">
+              <a className="uk-navbar-item uk-logo">Shopper</a>
+            </Link>
+          </div>
+
+          <div class="uk-navbar-right">
+            <ul class="uk-navbar-nav">
+              <li class="uk-active"><a href=""></a></li>
+              <li class="uk-parent"><a href=""></a></li>
+              <li>{user ? (
+                <a onClick={this.handleLogout}>Logout</a>
+                ) : (
+                <a onClick={this.handleLogin}>Login</a>
+              )}</li>
+            </ul>
+          </div>
+        </nav>
+
+        <div className="uk-grid" uk-grid>
+          <div className="uk-width-auto">
+            <ul className="uk-nav uk-nav-default">
+              <li className="uk-active"><a href="#">Active</a></li>
+              <li><a href="#">Item</a></li>
+              <li><a href="#">Item</a></li>
+            </ul>
+          </div>
+
+          <div className="uk-width-expand">
+            
+            {user && (
+              <div>
+                <form onSubmit={this.handleSubmit}>
+                  <div className="uk-margin">
+                    <input
+                      className="uk-input"
+                      type={'text'}
+                      onChange={this.handleChange}
+                      placeholder={'add message...'}
+                      value={value}
                     />
-                  ))}
-              </ul>
-            </div>
-          )}
+                  </div>
+                </form>
+
+                <ul className="uk-list uk-list-divider">
+                  {messages &&
+                    Array.from(messages.keys()).map(key => (
+                      <List
+                        key={key}
+                        text={messages.get(key).data().text}
+                        handleDelete={this.handleDelete.bind(null, messages.get(key))}
+                      />
+                    ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
 
         <style jsx>{`
-          @font-face {
-            font-family: "RiiT_F";
-            src: url("../static/font/RiiT_F.otf") format("opentype");
-          }
-          font-family: 'RiiT_F', 'Patrick Hand SC', cursive;
         `}</style>
       </div>
     );
