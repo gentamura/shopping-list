@@ -7,26 +7,15 @@ import clientCredentials from '../credentials/client';
 import Link from 'next/link';
 import Head from '../components/head';
 
-const List = ({ text, handleDelete }) => {
-  return (
-    <li>
-      <label>
-        {text}
-      </label>
-      <a href="" className="uk-icon-button" uk-icon="trash" onClick={handleDelete}></a>
-    </li>
-  );
-};
-
 export default class Home extends React.Component {
   static async getInitialProps ({ req, query }) {
     const user = req && req.session ? req.session.decodedToken : null;
     // don't fetch anything from firebase if the user is not found
-    // const snap = user && await req.firebaseServer.database().ref('messages').once('value');
-    // const messages = snap && snap.val();
-    const messages = null;
+    // const snap = user && await req.firebaseServer.database().ref('items').once('value');
+    // const items = snap && snap.val();
+    const items = null;
     console.log('getInitialProps:user', user);
-    return { user, messages };
+    return { user, items };
   }
 
   constructor (props) {
@@ -35,7 +24,7 @@ export default class Home extends React.Component {
     this.state = {
       user: this.props.user,
       value: '',
-      messages: this.props.messages,
+      items: this.props.items,
     }
 
     this.addDbListener = this.addDbListener.bind(this);
@@ -96,18 +85,21 @@ export default class Home extends React.Component {
       lastLoggedIn: Date.now(),
     });
 
-    let unsubscribe = db
+    const itemsRef = await db
       .doc(`/users/${user.uid}`)
-      .collection('messages')
-      .onSnapshot(
+      .collection('items');
+
+    const itemsSortedByCreatedAtRef = itemsRef.orderBy('createdAt', 'desc');
+
+    let unsubscribe = itemsSortedByCreatedAtRef.onSnapshot(
         querySnapshot => {
-          var messages = new Map();
+          var items = new Map();
 
           querySnapshot.forEach(function (doc) {
-            messages.set(doc.id, doc);
+            items.set(doc.id, doc);
           });
 
-          if (messages) this.setState({ messages });
+          if (items) this.setState({ items });
         },
         error => {
           console.error(error);
@@ -118,7 +110,7 @@ export default class Home extends React.Component {
   }
 
   removeDbListener () {
-    // firebase.database().ref('messages').off();
+    // firebase.database().ref('items').off();
     if (this.state.unsubscribe) {
       this.state.unsubscribe();
     }
@@ -137,11 +129,12 @@ export default class Home extends React.Component {
     const date = new Date().getTime();
 
     db.doc(`users/${user.uid}`)
-      .collection('messages')
+      .collection('items')
       .doc(`${date}`)
       .set({
         id: date,
         text: this.state.value,
+        createdAt: Date.now(),
       });
 
     this.setState({ value: '' });
@@ -168,82 +161,97 @@ export default class Home extends React.Component {
     doc.ref.delete();
 
     // Delete on local state
-    const messages = Object.assign(new Map(), this.state.messages);
-    messages.delete(doc.id);
+    const items = Object.assign(new Map(), this.state.items);
+    items.delete(doc.id);
 
-    this.setState({ messages });
+    this.setState({ items });
   }
 
   render() {
-    const { user, value, messages } = this.state;
+    const { user, value, items } = this.state;
 
     return (
-      <div className="uk-container">
+      <>
         <Head title="Home" />
 
-        <nav className="uk-navbar-container" uk-navbar="boundary-align: true; align: center;">
+        <nav className="uk-navbar-container uk-navbar" uk-navbar="true">
           <div className="uk-navbar-left">
-            <Link prefetch href="/">
-              <a className="uk-navbar-item uk-logo">Shopper</a>
-            </Link>
+            <ul className="uk-navbar-nav">
+              <li className="uk-active">
+                <Link prefetch href="/">
+                  <a className="uk-navbar-item uk-logo">Shopper</a>
+                </Link>
+              </li>
+            </ul>
           </div>
 
-          <div class="uk-navbar-right">
-            <ul class="uk-navbar-nav">
-              <li class="uk-active"><a href=""></a></li>
-              <li class="uk-parent"><a href=""></a></li>
-              <li>{user ? (
-                <a onClick={this.handleLogout}>Logout</a>
-                ) : (
-                <a onClick={this.handleLogin}>Login</a>
-              )}</li>
+          <div className="uk-navbar-right">
+            <ul className="uk-navbar-nav">
+              <li className="uk-active">
+                {user ?
+                  (
+                    <>
+                      <a href="#" className="">Menu</a>
+                      <div className="uk-navbar-dropdown uk-navbar-dropdown-bottom-right uk-animation-fade uk-animation-enter">
+                        <ul className="uk-nav uk-navbar-dropdown-nav">
+                          <li className="uk-active"><a href="#">Active</a></li>
+                          <li><a href="#">Item</a></li>
+                          <li><a href="#">Item</a></li>
+                          <li><a onClick={this.handleLogout}>Logout</a></li>
+                        </ul>
+                      </div>
+                    </>
+                  ) :
+                  (
+                    <a onClick={this.handleLogin} className="">Login</a>
+                  )
+                }
+              </li>
             </ul>
           </div>
         </nav>
 
-        <div className="uk-grid" uk-grid>
-          <div className="uk-width-auto">
-            <ul className="uk-nav uk-nav-default">
-              <li className="uk-active"><a href="#">Active</a></li>
-              <li><a href="#">Item</a></li>
-              <li><a href="#">Item</a></li>
-            </ul>
-          </div>
+        <div uk-spinner="true"></div>
 
-          <div className="uk-width-expand">
-            
-            {user && (
-              <div>
-                <form onSubmit={this.handleSubmit}>
-                  <div className="uk-margin">
-                    <input
-                      className="uk-input"
-                      type={'text'}
-                      onChange={this.handleChange}
-                      placeholder={'add message...'}
-                      value={value}
-                    />
-                  </div>
-                </form>
+        <div>
+          <ul className="uk-flex-center uk-tab" uk-tab="">
+            <li className="uk-active"><a href="#">Repeated</a></li>
+            <li className=""><a href="#">Temporary</a></li>
+          </ul>
 
-                <ul className="uk-list uk-list-divider">
-                  {messages &&
-                    Array.from(messages.keys()).map(key => (
-                      <List
-                        key={key}
-                        text={messages.get(key).data().text}
-                        handleDelete={this.handleDelete.bind(null, messages.get(key))}
-                      />
-                    ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          {user && (
+            <>
+              <form onSubmit={this.handleSubmit}>
+                <div className="uk-margin">
+                  <input
+                    className="uk-input"
+                    type={'text'}
+                    onChange={this.handleChange}
+                    placeholder={'add item...'}
+                    value={value}
+                  />
+                </div>
+              </form>
+              <ul className="uk-list uk-list-divider uk-switcher">
+                <li className="uk-active">
+                  <ul className="uk-list uk-list-divider">
+                    {items &&
+                      Array.from(items.keys()).map(key => (
+                        <li key={key}>
+                          <label>{items.get(key).data().text}</label>
+                          <a href="" className="uk-icon-button" uk-icon="trash" onClick={this.handleDelete.bind(null, items.get(key))}></a>
+                        </li>
+                      ))}
+                  </ul>
+                </li>
+              </ul>
+            </>
+          )}
         </div>
 
         <style jsx>{`
         `}</style>
-      </div>
+      </>
     );
   }
 }

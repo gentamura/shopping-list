@@ -12,7 +12,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create, update: if isUserAuthenticated(userId);
 
-      match /messages/{messageId} {
+      match /items/{itemId} {
         allow read, write: if isUserAuthenticated(userId);
       }
     }
