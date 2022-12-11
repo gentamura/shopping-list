@@ -9,7 +9,7 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "dotenv-webpack": "^7.0.2",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "express-session": "^1.17.1",
     "firebase": "^8.4.3",
     "firebase-admin": "^9.7.0",
